@@ -1,10 +1,11 @@
-以下是最终优化版本，专为手机触摸和显示进行深度适配：
+好的，我根据您的反馈进行了针对性修复：
 
-- **布局简洁无遮挡**：所有面板位于边角，中心区域完全留给三维球体
-- **点击精准有效**：canvas 全屏覆盖，信息面板和图例不拦截点击事件
-- **控制面板默认折叠**，展开时向上弹出，不影响底部操作
-- **初始无数据**：信息面板仅显示“点击数据点查看详情”，点击后才展示具体信息
-- **安全区适配**：完美支持刘海屏等异形屏
+1. **图例文字恢复显示**：将图例字体调大、颜色改为亮白，确保“0-正常”、“1-轻度”等文字清晰可见。
+2. **信息面板上移**：将信息面板的底部位置从 `12px` 提高到 `70px`，避开底部居中的控制面板，避免遮挡。
+3. **控制面板微调**：保持底部居中，但展开时向上延伸，不会与信息面板重叠。
+4. **整体手机触摸优化**：保持点云点击精准，所有面板均不干扰点击。
+
+以下是完整代码，复制保存为 `.html` 文件即可在手机上扫码查看：
 
 ```html
 <!DOCTYPE html>
@@ -25,20 +26,11 @@
             touch-action: none;
             background: #000;
         }
-        /* 确保 canvas 接收所有触摸事件 */
         canvas {
             display: block;
             width: 100%;
             height: 100%;
             touch-action: none;
-        }
-        /* 所有面板默认不拦截点击 */
-        .panel {
-            pointer-events: none;
-        }
-        /* 需要点击的控件单独开启 */
-        .clickable {
-            pointer-events: auto;
         }
         /* 标题 - 顶部居中 */
         .title-card {
@@ -74,53 +66,58 @@
             pointer-events: none;
             z-index: 300;
         }
-        /* 图例 - 左下角紧凑 */
+        /* 图例 - 左下角，确保文字清晰 */
         .legend {
             position: fixed;
             bottom: max(12px, env(safe-area-inset-bottom, 12px));
             left: max(12px, env(safe-area-inset-left, 12px));
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.8);
             backdrop-filter: blur(8px);
-            padding: 6px 10px;
+            padding: 8px 12px;
             border-radius: 16px;
-            font-size: 10px;
-            border: 1px solid rgba(255,255,255,0.2);
+            font-size: 11px;
+            border: 1px solid rgba(255,255,255,0.25);
             z-index: 200;
             pointer-events: none;
-            max-width: 140px;
+            min-width: 130px;
         }
         .legend h4 {
-            font-size: 11px;
-            margin-bottom: 4px;
+            font-size: 12px;
+            margin-bottom: 6px;
             text-align: center;
-            color: #ddd;
+            color: #fff;
         }
         .legend-item {
             display: flex;
             align-items: center;
-            gap: 6px;
-            margin-bottom: 2px;
+            gap: 8px;
+            margin-bottom: 4px;
+            color: white;
         }
         .legend-color {
-            width: 10px;
-            height: 10px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
         }
-        .legend-stats {
-            font-size: 8px;
-            text-align: center;
-            margin-top: 4px;
-            color: #aaa;
+        .legend-item span {
+            font-size: 11px;
+            font-weight: 500;
         }
-        /* 信息面板 - 右下角，初始简洁 */
+        .legend-stats {
+            font-size: 9px;
+            text-align: center;
+            margin-top: 5px;
+            color: #ccc;
+        }
+        /* 信息面板 - 右下角，底部提高避免被控制面板遮挡 */
         .info-panel {
             position: fixed;
-            bottom: max(12px, env(safe-area-inset-bottom, 12px));
+            bottom: max(70px, env(safe-area-inset-bottom, 70px));
             right: max(12px, env(safe-area-inset-right, 12px));
-            width: 240px;
-            max-height: 40vh;
+            width: 250px;
+            max-height: 42vh;
             overflow-y: auto;
-            background: rgba(15, 25, 45, 0.88);
+            background: rgba(15, 25, 45, 0.92);
             backdrop-filter: blur(12px);
             border-radius: 20px;
             padding: 10px 14px;
@@ -160,7 +157,7 @@
             bottom: max(12px, env(safe-area-inset-bottom, 12px));
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             backdrop-filter: blur(10px);
             border-radius: 40px;
             border: 1px solid rgba(255,255,255,0.2);
@@ -183,6 +180,7 @@
             border-radius: 40px;
             user-select: none;
             pointer-events: auto;
+            color: white;
         }
         .panel-header span:first-child {
             display: flex;
@@ -241,9 +239,10 @@
         @media (max-width: 480px) {
             .title-card { font-size: 12px; padding: 4px 12px; }
             .instruction { font-size: 8px; top: max(8px, env(safe-area-inset-top, 8px)); right: max(8px, env(safe-area-inset-right, 8px)); }
-            .legend { bottom: max(8px, env(safe-area-inset-bottom, 8px)); left: max(8px, env(safe-area-inset-left, 8px)); padding: 4px 8px; max-width: 120px; }
-            .legend h4 { font-size: 10px; }
-            .info-panel { width: 200px; bottom: max(8px, env(safe-area-inset-bottom, 8px)); right: max(8px, env(safe-area-inset-right, 8px)); padding: 8px 10px; font-size: 10px; max-height: 38vh; }
+            .legend { bottom: max(8px, env(safe-area-inset-bottom, 8px)); left: max(8px, env(safe-area-inset-left, 8px)); padding: 6px 10px; min-width: 110px; }
+            .legend h4 { font-size: 11px; }
+            .legend-item span { font-size: 10px; }
+            .info-panel { width: 210px; bottom: max(65px, env(safe-area-inset-bottom, 65px)); right: max(8px, env(safe-area-inset-right, 8px)); padding: 8px 10px; font-size: 10px; max-height: 40vh; }
             .control-panel { width: 160px; bottom: max(8px, env(safe-area-inset-bottom, 8px)); }
             .panel-header { padding: 6px 12px; font-size: 11px; }
         }
@@ -254,10 +253,10 @@
     <div class="instruction">🖱️ 拖拽/点击 | 自动旋转</div>
     <div class="legend">
         <h4>📊 发育不良程度</h4>
-        <div class="legend-item"><div class="legend-color" style="background: #4ade80;"></div><span>0-正常</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: #60a5fa;"></div><span>1-轻度</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: #fbbf24;"></div><span>2-中度</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: #f87171;"></div><span>3-重度</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #4ade80;"></div><span>0 - 正常</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #60a5fa;"></div><span>1 - 轻度</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #fbbf24;"></div><span>2 - 中度</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #f87171;"></div><span>3 - 重度</span></div>
         <div class="legend-stats" id="stats-info">加载中...</div>
     </div>
     <div id="data-panel" class="info-panel">
@@ -743,7 +742,6 @@
         const pointer = new THREE.Vector2();
         
         function onPointerDown(event) {
-            // 获取 canvas 相对坐标
             const rect = renderer.domElement.getBoundingClientRect();
             const clientX = event.clientX ?? (event.touches ? event.touches[0].clientX : 0);
             const clientY = event.clientY ?? (event.touches ? event.touches[0].clientY : 0);
@@ -755,7 +753,7 @@
                 const clicked = intersects[0].object;
                 highlightPoint(clicked);
                 updateInfoPanel(clicked.userData.pointData);
-                event.preventDefault(); // 防止页面滚动
+                event.preventDefault();
             }
         }
         
@@ -859,7 +857,7 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
         
-        console.log(`手机优化版，共 ${allData.length} 个儿童数据，支持触摸点击。`);
+        console.log(`手机优化版，共 ${allData.length} 个儿童数据，图例文字已恢复，信息面板上移。`);
     </script>
 </body>
 </html>
