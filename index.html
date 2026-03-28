@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>0-6岁发育不良儿童数据三维云球 | PCA发育分析</title>
+    <title>0-6岁发育不良儿童数据三维云球</title>
     <style>
         * {
             margin: 0;
@@ -12,86 +12,107 @@
         }
         body {
             overflow: hidden;
-            font-family: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', Roboto, sans-serif;
+            font-family: system-ui, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', Roboto, sans-serif;
             touch-action: none;
             background: #000;
         }
-        /* 通用面板样式 */
-        .panel {
-            position: fixed;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(12px);
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
-            pointer-events: auto;
-            z-index: 200;
-            font-size: 13px;
-            transition: all 0.2s ease;
+        /* 全局安全区适配 */
+        :root {
+            --safe-top: env(safe-area-inset-top, 12px);
+            --safe-bottom: env(safe-area-inset-bottom, 12px);
+            --safe-left: env(safe-area-inset-left, 12px);
+            --safe-right: env(safe-area-inset-right, 12px);
         }
-        /* 标题 - 顶部居中 */
+        /* 标题 - 增加安全区，更靠下 */
         .title-card {
             position: fixed;
-            top: 12px;
+            top: calc(var(--safe-top) + 8px);
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(10px);
             padding: 6px 16px;
             border-radius: 40px;
             color: #fff;
             font-size: 14px;
-            font-weight: bold;
-            backdrop-filter: blur(8px);
+            font-weight: 600;
             white-space: nowrap;
             letter-spacing: 0.5px;
             border-bottom: 2px solid #3b82f6;
             z-index: 300;
             pointer-events: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
-        /* 图例 - 左上角 */
-        .legend {
-            top: 12px;
-            left: 12px;
-            padding: 8px 12px;
+        /* 简短的说明文字 */
+        .instruction {
+            position: fixed;
+            top: calc(var(--safe-top) + 12px);
+            right: calc(var(--safe-right) + 8px);
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            padding: 4px 10px;
+            border-radius: 20px;
+            color: #ccc;
             font-size: 10px;
-            max-width: 140px;
+            pointer-events: none;
+            z-index: 300;
+        }
+        /* 图例 - 左上角，紧凑 */
+        .legend {
+            position: fixed;
+            top: calc(var(--safe-top) + 12px);
+            left: calc(var(--safe-left) + 8px);
             background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            padding: 6px 10px;
+            border-radius: 16px;
+            font-size: 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+            z-index: 200;
+            pointer-events: none;
+            max-width: 140px;
         }
         .legend h4 {
             font-size: 11px;
             margin-bottom: 4px;
             text-align: center;
+            color: #ddd;
         }
         .legend-item {
             display: flex;
             align-items: center;
-            margin-bottom: 3px;
             gap: 6px;
+            margin-bottom: 2px;
         }
         .legend-color {
             width: 10px;
             height: 10px;
             border-radius: 50%;
         }
-        .stats {
-            font-size: 9px;
-            margin-top: 4px;
+        .legend-stats {
+            font-size: 8px;
             text-align: center;
-            color: #ccc;
+            margin-top: 4px;
+            color: #aaa;
         }
-        /* 信息面板 - 右下角 */
+        /* 信息面板 - 右下角，初始简洁 */
         .info-panel {
-            bottom: 16px;
-            right: 12px;
-            width: 260px;
-            max-height: 45vh;
+            position: fixed;
+            bottom: calc(var(--safe-bottom) + 12px);
+            right: calc(var(--safe-right) + 8px);
+            width: 240px;
+            max-height: 42vh;
             overflow-y: auto;
+            background: rgba(15, 25, 45, 0.88);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
             padding: 10px 14px;
-            font-size: 11px;
-            background: rgba(15, 25, 45, 0.9);
+            color: #eef4ff;
             border-left: 3px solid #3b82f6;
-            border-radius: 16px;
+            font-size: 11px;
             pointer-events: none;
+            z-index: 200;
+            transition: all 0.2s;
         }
         .info-panel h3 {
             font-size: 14px;
@@ -106,7 +127,7 @@
             font-weight: 600;
             color: #ffbc6e;
             display: inline-block;
-            min-width: 65px;
+            min-width: 60px;
         }
         .badge {
             display: inline-block;
@@ -116,14 +137,19 @@
             background: #1e293b;
             margin-left: 5px;
         }
-        /* 可折叠控制面板 - 左下角 */
+        /* 可折叠控制面板 - 左下角，默认折叠 */
         .control-panel {
-            bottom: 16px;
-            left: 12px;
-            max-width: 220px;
-            overflow: hidden;
-            transition: all 0.3s;
+            position: fixed;
+            bottom: calc(var(--safe-bottom) + 12px);
+            left: calc(var(--safe-left) + 8px);
             background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 28px;
+            border: 1px solid rgba(255,255,255,0.2);
+            z-index: 250;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            max-width: 200px;
         }
         .panel-header {
             display: flex;
@@ -131,13 +157,16 @@
             align-items: center;
             padding: 8px 12px;
             cursor: pointer;
-            font-weight: 600;
             font-size: 12px;
+            font-weight: 500;
             background: rgba(0,0,0,0.5);
-            border-radius: 20px;
+            border-radius: 28px;
+            user-select: none;
         }
-        .panel-header:hover {
-            background: rgba(50,70,100,0.6);
+        .panel-header span:first-child {
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
         .toggle-icon {
             font-size: 14px;
@@ -150,8 +179,8 @@
             padding: 0 12px;
         }
         .control-panel.open .panel-content {
-            max-height: 200px;
-            padding: 8px 12px 12px 12px;
+            max-height: 180px;
+            padding: 8px 12px 12px;
         }
         .control-panel.open .toggle-icon {
             transform: rotate(180deg);
@@ -159,8 +188,8 @@
         .control-panel input {
             width: 100%;
             padding: 6px 8px;
-            margin: 5px 0;
-            border-radius: 12px;
+            margin: 6px 0;
+            border-radius: 20px;
             border: none;
             background: #2d3748;
             color: white;
@@ -173,70 +202,57 @@
             padding: 6px;
             border-radius: 30px;
             color: white;
-            font-weight: bold;
-            font-size: 12px;
-            margin-top: 5px;
+            font-weight: 600;
+            font-size: 11px;
+            margin-top: 4px;
             cursor: pointer;
         }
         .control-panel p {
             font-size: 9px;
-            color: #ccc;
-            margin: 5px 0 0;
+            color: #aaa;
+            margin: 6px 0 0;
             line-height: 1.2;
         }
-        .instruction {
-            position: fixed;
-            top: 12px;
-            right: 12px;
-            background: rgba(0,0,0,0.55);
-            backdrop-filter: blur(4px);
-            padding: 4px 8px;
-            border-radius: 20px;
-            color: #ddd;
-            font-size: 9px;
-            pointer-events: none;
-            z-index: 300;
-        }
-        /* 手机小屏进一步调整 */
+        /* 手机小屏微调 */
         @media (max-width: 480px) {
-            .title-card { font-size: 12px; top: 8px; padding: 4px 12px; }
-            .legend { top: 8px; left: 8px; padding: 6px 8px; max-width: 130px; }
+            .title-card { font-size: 12px; padding: 4px 12px; top: calc(var(--safe-top) + 6px); }
+            .instruction { font-size: 8px; top: calc(var(--safe-top) + 8px); right: calc(var(--safe-right) + 6px); }
+            .legend { padding: 4px 8px; top: calc(var(--safe-top) + 8px); left: calc(var(--safe-left) + 6px); max-width: 120px; }
             .legend h4 { font-size: 10px; }
-            .info-panel { width: 220px; bottom: 12px; right: 8px; padding: 8px 10px; max-height: 40vh; }
-            .control-panel { bottom: 12px; left: 8px; max-width: 200px; }
+            .info-panel { width: 210px; bottom: calc(var(--safe-bottom) + 10px); right: calc(var(--safe-right) + 6px); padding: 8px 12px; font-size: 10px; max-height: 38vh; }
+            .control-panel { max-width: 180px; bottom: calc(var(--safe-bottom) + 10px); left: calc(var(--safe-left) + 6px); }
             .panel-header { padding: 6px 10px; font-size: 11px; }
-            .instruction { top: 8px; right: 8px; font-size: 8px; }
         }
     </style>
 </head>
 <body>
     <div class="title-card">🧸 0-6岁发育不良儿童数据三维云球</div>
-    <div class="instruction">🖱️ 拖拽旋转 | 自动旋转 | 点击点查看详情</div>
-    <div class="legend panel">
+    <div class="instruction">🖱️ 拖拽/点击 | 自动旋转</div>
+    <div class="legend">
         <h4>📊 发育不良程度</h4>
         <div class="legend-item"><div class="legend-color" style="background: #4ade80;"></div><span>0-正常</span></div>
         <div class="legend-item"><div class="legend-color" style="background: #60a5fa;"></div><span>1-轻度</span></div>
         <div class="legend-item"><div class="legend-color" style="background: #fbbf24;"></div><span>2-中度</span></div>
         <div class="legend-item"><div class="legend-color" style="background: #f87171;"></div><span>3-重度</span></div>
-        <div class="stats" id="stats-info">加载中...</div>
+        <div class="legend-stats" id="stats-info">加载中...</div>
     </div>
-    <div id="data-panel" class="info-panel panel">
+    <div id="data-panel" class="info-panel">
         <h3>👶 儿童数据详情</h3>
-        <p>✨ 点击任意数据点，查看发育评估与月龄</p>
-        <p style="font-size:10px;">共 <strong id="total-count">0</strong> 个样本</p>
-        <div class="stats">🧠 PCA主成分空间 | 球体半径3.2</div>
+        <p>✨ 点击任意数据点，查看详细发育评估与月龄</p>
+        <p style="font-size:10px; margin-top:6px;">共 <strong id="total-count">0</strong> 个样本</p>
+        <div class="stats" style="margin-top:6px;">🧠 PCA主成分空间 | 球体半径3.2</div>
     </div>
     
-    <!-- 可折叠控制面板 (默认关闭) -->
-    <div class="control-panel panel" id="controlPanel">
+    <!-- 可折叠控制面板 -->
+    <div class="control-panel" id="controlPanel">
         <div class="panel-header" id="panelHeader">
-            <span>📂 添加新数据 (CSV)</span>
+            <span>📂 添加新数据</span>
             <span class="toggle-icon">▼</span>
         </div>
         <div class="panel-content">
             <input type="file" id="csvUpload" accept=".csv">
-            <button id="uploadBtn">上传并添加到云球</button>
-            <p>CSV需包含列：FAC1_1,FAC2_1,FAC3_1,Group,Age,Name<br>Age为岁数(0.1~6.0)，自动转月份</p>
+            <button id="uploadBtn">上传CSV并添加</button>
+            <p>列：FAC1_1,FAC2_1,FAC3_1,Group,Age,Name<br>Age为岁数(0.1~6.0)，自动转月份</p>
         </div>
     </div>
 
@@ -511,7 +527,7 @@
             const groupCnt = {0:0,1:0,2:0,3:0};
             allData.forEach(d => groupCnt[d.group]++);
             document.getElementById('total-count').innerText = allData.length;
-            document.getElementById('stats-info').innerHTML = `总数:${allData.length} 正常:${groupCnt[0]} 轻:${groupCnt[1]} 中:${groupCnt[2]} 重:${groupCnt[3]}`;
+            document.getElementById('stats-info').innerHTML = `总数:${allData.length}  正常:${groupCnt[0]} 轻:${groupCnt[1]} 中:${groupCnt[2]} 重:${groupCnt[3]}`;
         }
         updateStats();
         
@@ -646,7 +662,7 @@
                 roughness: 0.3,
                 metalness: 0.1
             });
-            const geometry = new THREE.SphereGeometry(0.075, 20, 20); // 手机触摸友好
+            const geometry = new THREE.SphereGeometry(0.075, 20, 20); // 手机友好大小
             const sphere = new THREE.Mesh(geometry, material);
             sphere.position.set(dataPoint.x, dataPoint.y, dataPoint.z);
             sphere.userData = { pointData: dataPoint };
@@ -676,13 +692,13 @@
             const months = ageToMonths(pointData.ageYears);
             panel.innerHTML = `
                 <h3>👶 ${pointData.name}  (${months}个月)</h3>
-                <p><span class="data-label">🎯 PC1:</span> ${pointData.x.toFixed(4)}</p>
-                <p><span class="data-label">📐 PC2:</span> ${pointData.y.toFixed(4)}</p>
-                <p><span class="data-label">📊 PC3:</span> ${pointData.z.toFixed(4)}</p>
-                <p><span class="data-label">🏷️ 分组:</span> <strong style="color:${groupColor}">Group ${pointData.group}</strong> 
+                <p><span class="data-label">PC1:</span> ${pointData.x.toFixed(4)}</p>
+                <p><span class="data-label">PC2:</span> ${pointData.y.toFixed(4)}</p>
+                <p><span class="data-label">PC3:</span> ${pointData.z.toFixed(4)}</p>
+                <p><span class="data-label">分组:</span> <strong style="color:${groupColor}">Group ${pointData.group}</strong> 
                 <span class="badge">${groupNameMap[pointData.group]}</span></p>
-                <p><span class="data-label">📖 评估:</span> ${pointData.group === 0 ? '发育商正常。' : (pointData.group === 1 ? '轻度发育迟缓。' : (pointData.group === 2 ? '中度发育不良。' : '重度发育迟缓。'))}</p>
-                <div class="stats">🧸 月龄 ${months}个月 | 坐标 ${pointData.x.toFixed(2)}, ${pointData.y.toFixed(2)}, ${pointData.z.toFixed(2)}</div>
+                <p><span class="data-label">评估:</span> ${pointData.group === 0 ? '发育商正常。' : (pointData.group === 1 ? '轻度发育迟缓。' : (pointData.group === 2 ? '中度发育不良。' : '重度发育迟缓。'))}</p>
+                <div style="font-size:9px; margin-top:6px; color:#aac8ff;">月龄 ${months}个月 | 坐标 ${pointData.x.toFixed(2)}, ${pointData.y.toFixed(2)}, ${pointData.z.toFixed(2)}</div>
             `;
         }
         
@@ -694,10 +710,8 @@
                 allMeshes.push(mesh);
             });
             updateStats();
-            if (allMeshes.length > 0) {
-                highlightPoint(allMeshes[0]);
-                updateInfoPanel(allMeshes[0].userData.pointData);
-            }
+            // 不自动显示任何具体数据，保持初始提示
+            // 但为了方便演示，如果用户点击前没有高亮，无所谓
         }
         
         loadAllPoints();
@@ -768,7 +782,6 @@
             }
         }
         
-        // 上传
         document.getElementById('uploadBtn').addEventListener('click', () => {
             const fileInput = document.getElementById('csvUpload');
             const file = fileInput.files[0];
@@ -785,7 +798,7 @@
             reader.readAsText(file, 'UTF-8');
         });
         
-        // 折叠面板交互 (默认关闭)
+        // 折叠面板
         const panel = document.getElementById('controlPanel');
         const header = document.getElementById('panelHeader');
         header.addEventListener('click', () => {
@@ -816,7 +829,7 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
         
-        console.log(`手机优化版，共 ${allData.length} 个儿童数据。`);
+        console.log(`手机优化版，共 ${allData.length} 个儿童数据，初始无预选数据。`);
     </script>
 </body>
 </html>
