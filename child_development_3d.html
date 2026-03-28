@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>0-6岁发育不良儿童数据三维云球 | PCA发育分析</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', Roboto, sans-serif;
+        }
+        /* 控制面板 */
+        .control-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 12px 20px;
+            color: white;
+            z-index: 200;
+            font-size: 13px;
+            border: 1px solid rgba(255,255,255,0.2);
+            pointer-events: auto;
+            font-family: monospace;
+            max-width: 260px;
+        }
+        .control-panel input {
+            margin: 5px 0;
+            padding: 5px 8px;
+            border-radius: 8px;
+            border: none;
+            background: #2d3748;
+            color: white;
+            width: 100%;
+            cursor: pointer;
+        }
+        .control-panel button {
+            margin-top: 8px;
+            background: #3b82f6;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+        }
+        .control-panel button:hover {
+            background: #2563eb;
+        }
+        .control-panel p {
+            margin: 5px 0;
+            font-size: 11px;
+            color: #ccc;
+        }
+        .info-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            background: rgba(15, 25, 45, 0.85);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 16px 20px;
+            color: #eef4ff;
+            border-left: 4px solid #3b82f6;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            font-size: 13px;
+            pointer-events: none;
+            z-index: 100;
+            font-weight: 400;
+        }
+        .info-panel h3 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            color: #7aaef0;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            padding-bottom: 6px;
+        }
+        .info-panel p {
+            margin: 8px 0;
+            line-height: 1.45;
+        }
+        .info-panel .data-label {
+            font-weight: 600;
+            color: #ffbc6e;
+            display: inline-block;
+            min-width: 70px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 6px;
+            background: #1e293b;
+        }
+        .legend {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(8px);
+            padding: 12px 18px;
+            border-radius: 20px;
+            color: white;
+            font-size: 12px;
+            font-family: monospace;
+            z-index: 100;
+            border: 1px solid rgba(255,255,255,0.2);
+            pointer-events: none;
+        }
+        .legend h4 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            text-align: center;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+            gap: 10px;
+        }
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+        .instruction {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(5px);
+            padding: 6px 14px;
+            border-radius: 24px;
+            color: #ddd;
+            font-size: 12px;
+            font-family: monospace;
+            pointer-events: none;
+            z-index: 100;
+        }
+        .title-card {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            padding: 8px 20px;
+            border-radius: 40px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+            backdrop-filter: blur(8px);
+            pointer-events: none;
+            z-index: 100;
+            white-space: nowrap;
+            letter-spacing: 1px;
+            border-bottom: 2px solid #3b82f6;
+        }
+        .stats {
+            font-size: 11px;
+            color: #aac8ff;
+            margin-top: 8px;
+            border-top: 1px solid #334155;
+            padding-top: 6px;
+        }
+        @media (max-width: 600px) {
+            .info-panel { width: 260px; padding: 12px 16px; bottom: 12px; right: 12px; font-size: 11px; }
+            .legend { font-size: 10px; padding: 8px 12px; top: 70px; left: 10px; }
+            .title-card { font-size: 12px; top: 12px; white-space: nowrap; padding: 5px 12px; }
+            .control-panel { bottom: 12px; left: 12px; padding: 8px 12px; max-width: 220px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="title-card">🧸 0-6岁发育不良儿童数据三维云球</div>
+    <div class="instruction">
+        🖱️ 拖拽旋转 | 自动旋转 | 点击数据点查看详情
+    </div>
+    <div class="legend">
+        <h4>📊 发育不良程度 (Group)</h4>
+        <div class="legend-item"><div class="legend-color" style="background: #4ade80;"></div><span>0 - 正常 (DQ ≥ 85)</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #60a5fa;"></div><span>1 - 轻度 (70 ≤ DQ < 85)</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #fbbf24;"></div><span>2 - 中度 (55 ≤ DQ < 70)</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #f87171;"></div><span>3 - 重度 (DQ < 55)</span></div>
+        <div class="stats" id="stats-info">加载数据中...</div>
+    </div>
+    <div class="control-panel">
+        <p>📂 添加新儿童数据 (CSV)</p>
+        <input type="file" id="csvUpload" accept=".csv">
+        <button id="uploadBtn">上传并添加到云球</button>
+        <p style="font-size:10px; margin-top:5px;">CSV需包含列：FAC1_1,FAC2_1,FAC3_1,Group,Age,Name<br>Age为岁数(0.1~6.0)，将自动转换为月份</p>
+    </div>
+    <div id="data-panel" class="info-panel">
+        <h3>👶 儿童数据详情</h3>
+        <p>✨ 点击任意数据点，查看该儿童的发育评估与月龄</p>
+        <p style="font-size:12px;">共 <strong id="total-count">0</strong> 个样本</p>
+        <div class="stats">🧠 PCA主成分空间 | 球体半径3.2 | 月龄1~72个月</div>
+    </div>
+
+    <!-- 引入Three.js核心库及扩展 -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // ---------- 1. 内嵌现有数据 (200条) 并生成姓名、年龄（岁）----------
+        const csvRaw = `FAC1_1,FAC2_1,FAC3_1,Group
+-1.272803113,-1.57749097,-1.263353842,2
+.0501402918148592,-1.712748585,-1.558148561,1
+-1.188306199,-1.597956594,.527023200766549,2
+.854888422696441,-1.767944972,-1.273758441,1
+-0.513705632,-1.634673162,.843712710059237,1
+.237519519379568,-1.690597194,.448157289561331,1
+-0.944493119,-1.557911263,2.04969571991141,2
+.743761202507236,-1.671927852,.359522813116414,1
+-0.078508727,-1.572190458,1.50746569745391,1
+1.59697126256369,-1.728035857,-0.207943355,0
+-2.415193882,-1.286635017,-0.878021798,2
+-0.726336457,-1.441176391,-1.262029335,1
+-1.009990853,-1.437599965,.011099723220738,1
+.436734290304505,-1.548141286,-0.936036342,1
+.0243901772612605,-1.512647644,.0593967906550563,1
+.937817188205171,-1.547347565,-0.621839238,1
+-0.636084961,-1.383776609,1.65959100008113,1
+.32301421998148,-1.45428368,.655319952676919,1
+1.29422833527458,-1.573807178,-0.041352237,0
+-0.361195194,-1.390769883,1.92047047661518,1
+-1.784231955,-1.179486941,-1.023784943,2
+-0.177621587,-1.317114777,-1.602315175,1
+-0.826787536,-1.28501665,-0.009939297,1
+.554747606452138,-1.376699869,-1.085151718,1
+-0.311704531,-1.273193827,.555002392273833,1
+.498633419839231,-1.370886149,.130442477174424,1
+-0.837345351,-1.180232087,1.81302762292506,1
+1.27923964802351,-1.379237731,-0.268425217,0
+.181827816521294,-1.251138884,1.12348294308281,1
+.894906287990394,-1.312623742,.612521007594578,1
+-2.775008579,-0.899006873,-0.797341562,2
+-1.021275204,-1.069169277,-1.226162323,1
+-1.218477362,-1.070167415,.0360656261274243,2
+.289502568916623,-1.185645029,-0.912789812,1
+-0.202927243,-1.142871184,.177810011013499,1
+.796344017407102,-1.185703816,-0.546131728,1
+-0.574928519,-1.038171715,1.44186937132948,1
+.29300142236384,-1.104907647,.685454334474554,1
+1.43511242500938,-1.241033553,-0.241445628,0
+-0.217431829,-1.058422512,1.74660757535655,1
+-1.506190794,-0.86021028,-1.162182692,2
+.0973005762726573,-1.005439746,-1.358809194,1
+-0.656502703,-0.952947422,.0840768133083316,1
+.747161298043615,-1.051897538,-1.052038116,1
+-0.199018487,-0.935560228,.570487756759033,1
+.656793161343465,-1.04067005,.0877320263592991,1
+-0.687823435,-0.848737224,1.69162570184383,1
+1.43452011423284,-1.048595377,-0.337366158,0
+.337108282730622,-0.92049653,1.05454200217899,1
+1.05018675419972,-0.981981388,.543580066690751,1
+-2.384659409,-0.595712047,-0.886796056,2
+-0.450627171,-0.772756716,-1.425652125,1
+-0.874209879,-0.763013235,-0.026997653,1
+.570423004722031,-0.866794622,-1.024957071,1
+-0.318486936,-0.785063725,.489591931670583,1
+.695887142941929,-0.826599704,-0.237926408,1
+-0.829869154,-0.660591255,1.79187205955257,1
+1.14697685166807,-0.845374965,-0.138565085,1
+.474540548612605,-0.76079443,.852756968592917,1
+-0.061036037,-0.690009575,1.66683283611601,1
+-1.642202768,-0.499717755,-1.27295603,2
+-0.012558197,-0.640755626,-1.641642342,1
+-0.667482698,-0.607804991,-0.101727444,1
+.599929576655734,-0.68940128,-1.028791586,1
+-0.343370933,-0.573490224,.619964776529101,1
+.657938258459283,-0.69367449,.0386543306593689,1
+-0.686678338,-0.501741664,1.6425480061439,1
+1.57540420396764,-0.715821752,-0.537459549,0
+.0587753946084786,-0.545057101,1.30749569777386,1
+.771853866077579,-0.606541959,.796533762285624,1
+-2.912457378,-0.190793818,-0.744481258,2
+-0.990192257,-0.379440701,-1.062012814,1
+-1.053413972,-0.393808264,-0.00326154,2
+.460324508716299,-0.510138387,-0.899655999,1
+-0.174723571,-0.452716354,.31572903041195,1
+.981264980229678,-0.512627161,-0.640787292,1
+-0.555362673,-0.346738122,1.50109692046182,1
+.449426985688985,-0.427269733,.567435697870798,1
+1.59153798833452,-0.563395639,-0.359464265,0
+-0.05812699,-0.381210853,1.65481942884149,1
+-1.312632006,-0.188412388,-1.178146786,2
+.256605414892708,-0.328228087,-1.45059734,1
+-0.494318589,-0.276162017,.0185191568819766,1
+.903586861368761,-0.374259624,-1.170056753,1
+-0.039713648,-0.258348568,.478699610243978,1
+.813218724668611,-0.363032136,-0.03028661,1
+-0.531397872,-0.17109931,1.57360706524007,1
+1.59094567755798,-0.370957464,-0.455384794,0
+.496413121350673,-0.243284871,.96275385566393,1
+1.20949159281977,-0.304769729,.451791920175696,1
+-1.919963107,.0492194540990532,-1.044541183,2
+-0.156338095,-0.105187843,-1.61670417,1
+-0.805504045,-0.073089716,-0.024328292,1
+.484466053375292,-0.161170289,-0.924092878,1
+-0.201914295,-0.067218819,.395332537331801,1
+.659655904133008,-0.17318115,-0.034962213,1
+-0.679202142,.017899167313652,1.62139244277141,1
+1.44314140761219,-0.181958986,-0.407599417,0
+.345729576109977,-0.053860139,.984308743106561,1
+1.05880804757908,-0.115344997,.473346807618326,1
+-1.762375915,.205937773316959,-1.062712786,2
+-0.30126309,.0833843806471914,-1.542688302,1
+-0.656554678,.0849073661333855,-0.121191365,1
+.750596589391067,-0.010910857,-1.199271203,1
+-0.332442913,.11922213259952,.600500855395343,1
+.808605271194616,-0.015184067,-0.131825286,1
+-0.812610035,.204766372960607,1.80033027074625,1
+1.5892114993789,-0.023535649,-0.53069298,0
+.212321682638718,.133007066781123,1.1632465710814,1
+.928279429402724,.0710959544028799,.678515125681867,1
+-2.596137895,.469638380185424,-0.82990216,2
+-0.830887418,.297770958577308,-1.15380096,1
+-0.894109134,.283403394887381,-0.095049687,1
+.616750072041444,.167499526889642,-1.017674635,1
+-0.018298007,.224921559818018,.197710393808193,1
+1.13769054355482,.165010752501774,-0.758805929,3
+-0.39893711,.330899792104227,1.38307828385806,1
+.60585254901413,.250368180664117,.449417061267041,1
+1.74796355165967,.114242274875905,-0.477482901,0
+.0954192977502214,.296853315302154,1.51057030214903,1
+-1.444322253,.518948157349701,-1.072825501,2
+.110518790620644,.38126373105356,-1.476428506,1
+-0.566963533,.420698649671587,.0361868352620622,1
+1.05425387410409,.304230798800752,-1.340536369,1
+-0.168524621,.448585723055993,.610251384757622,1
+.963885737403943,.315458286576172,-0.200766227,1
+-0.660208844,.535834981029353,1.70515883975372,1
+1.74161269029332,.307532959023307,-0.625864411,0
+.367602148848045,.463649420446801,1.09430563017757,1
+1.36015860555511,.37372069365485,.281312303394535,0
+-2.066049732,.758711271895463,-1.070372349,2
+-0.433525886,.617247146383554,-1.41282817,1
+-0.937194292,.634270829487342,.0809929927015102,1
+.635133066110625,.517320133801589,-1.094572495,1
+-0.324966717,.638862963927496,.579345292022849,1
+.810322916868341,.505309273044607,-0.20544183,1
+-0.525655854,.695963335471806,1.47714331607895,1
+1.31433043510957,.52497530550238,-0.276047642,0
+.219797878902255,.652647898109099,1.14209100770891,1
+1.21523361090422,.562292916914079,.355328171014568,1
+-1.600191801,.882723178265907,-1.128270442,2
+.0464310681585679,.738829065710655,-1.578515641,1
+-0.631230281,.775488451087654,-0.009502836,1
+.773041710687044,.680096482110004,-1.113813164,1
+-0.167379524,.795581283145401,.56157368905769,1
+.688432124576706,.690471461079288,.078417958657958,1
+-0.656184472,.882404286715693,1.68231163414249,1
+1.46615907746608,.682546133526422,-0.346680226,0
+.508486238582843,.796423046127821,.894212238830242,1
+1.08470499272787,.748733868157966,.56049648907811,1
+-2.355899721,1.13585571841392,-0.922340613,2
+-0.286883246,.949168263258438,-1.560460581,1
+-0.793430927,.966618200765293,-0.092869909,1
+.604941243250178,.863920634111803,-1.008040649,1
+-0.281089422,.945225276798268,.532738844146642,1
+.733284656764982,.903689298135976,-0.194779496,1
+-0.798230191,1.07055025557185,1.78255799185122,1
+1.18437436549112,.88491403679097,-0.095418172,1
+.369319794521771,.984142760580913,1.02068908662768,1
+-0.026517799,1.04070568114569,1.68374925850337,1
+-1.721510044,1.24138314634529,-0.868949501,2
+.187315157893365,1.07160269139167,-1.778609033,1
+-0.630085184,1.12248401117706,-0.058580531,1
+.916805075716747,1.01244385338796,-1.287676065,1
+-0.294456318,1.15509376003092,.768033649359968,1
+.835074764901316,1.02239257795417,-0.069214453,1
+-0.506662556,1.21389914918751,1.56090971306126,1
+1.61280171779069,1.01446725040131,-0.494312637,0
+.515389886288472,1.14256609741109,.897595523307714,1
+1.23134763305248,1.08065498503285,.412864077908179,1
+-2.729562321,1.52442074045897,-0.799889061,2
+-0.964311844,1.35255331885085,-1.123787862,1
+-1.164393277,1.35198143516624,.112209597647131,2
+.489084196654634,1.22142937835705,-0.935200556,1
+-0.148843158,1.27927766568849,.253953982533203,1
+.873164950843938,1.2327362839745,-0.499085664,1
+-0.663462703,1.39862532357695,1.64279854840788,1
+.341326956303246,1.31809371213684,.709137325816857,1
+1.34657824162471,1.19576348635395,-0.040516451,0
+-0.16622702,1.36415259237181,1.79652105678755,1
+-1.432249136,1.55865607440872,-1.141367118,2
+.282485827536137,1.40376593288271,-1.512372388,1
+-0.543373315,1.45870154911833,.0725671787831795,1
+1.08072336781079,1.34180744384443,-1.277925536,1
+-0.142055127,1.48616236809967,.672862218367439,1
+.987475955815738,1.35346118602292,-0.164385884,1
+-0.636618626,1.5738378804761,1.74153918327483,1
+1.76520290870511,1.34553585847005,-0.589484068,0
+.388313091964934,1.50207857429661,1.10445548360999,1
+1.38086954867199,1.41214984750466,.291462156826951,0
+-1.728430225,1.76315524968861,-1.021257515,2
+-0.113182031,1.62424865059511,-1.521096277,1
+-0.622608988,1.64212484250504,-0.079736095,1
+.784542279361305,1.54630661912432,-1.157815933,1
+-0.298497223,1.67643960897117,.641956125632668,1
+.842550961164854,1.54203340928215,-0.090370016,1
+-0.778664345,1.76198384933226,1.84178554098357,1
+1.62027791405423,1.53410808172928,-0.5154682,0
+.24338809731405,1.69065079755584,1.17847135123002,1
+1.10196411199194,1.61409149636614,.568954700271789,1`;
+
+        function parseBaseCSV(csvString) {
+            const lines = csvString.trim().split(/\r?\n/);
+            const points = [];
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                const vals = line.split(',');
+                if (vals.length < 4) continue;
+                const x = parseFloat(vals[0]);
+                const y = parseFloat(vals[1]);
+                const z = parseFloat(vals[2]);
+                const group = parseInt(vals[3], 10);
+                if (isNaN(x) || isNaN(y) || isNaN(z) || isNaN(group)) continue;
+                points.push({ x, y, z, group });
+            }
+            return points;
+        }
+
+        const basePoints = parseBaseCSV(csvRaw);
+        
+        // 生成不重复姓名 (用于内置数据)
+        const surnames = ["李","王","张","刘","陈","杨","赵","周","吴","徐","孙","马","朱","林","郭","何","高","郑","罗","梁","谢","宋","唐","许","韩","冯","邓","曹","彭","曾","肖","田","董","潘","袁","蔡","蒋","余","杜","叶","苏","魏","吕","丁","沈","任","姚","卢","姜","崔","钟","谭","陆","汪","范","金","石","廖","贾","夏"];
+        const givenNames = ["伟","芳","强","丽","明","华","静","磊","婷","宇","欣","杰","宁","艳","涛","娜","军","勇","敏","晨","曦","昊","然","子涵","雨桐","一诺","铭泽","思琪","沐阳","若溪","宇航","梓萱","逸飞","婉清","致远","沐晴","俊宇","雨萱","天佑","梓涵","子轩","语嫣"];
+        
+        function getFixedName(index) {
+            const surname = surnames[index % surnames.length];
+            const given = givenNames[Math.floor(index / surnames.length) % givenNames.length];
+            let name = surname + given;
+            if (index % 3 === 0 && given.length === 1) {
+                const extra = givenNames[(index + 7) % givenNames.length];
+                name = surname + given + extra;
+            }
+            return name;
+        }
+        
+        // 年龄生成：0.1 到 6.0 岁，避免0岁，确保月龄至少1个月
+        function getFixedAge(index) {
+            const seed = (index * 131071) % 1000;
+            const age = 0.1 + (seed / 1000) * 5.9; // 0.1 ~ 6.0
+            return Math.round(age * 10) / 10;
+        }
+        
+        // 将岁转换为月份显示（四舍五入取整）
+        function ageToMonths(ageYears) {
+            const months = Math.round(ageYears * 12);
+            return months === 0 ? 1 : months;
+        }
+        
+        // 构建完整数据列表
+        let allData = basePoints.map((p, idx) => ({
+            ...p,
+            name: getFixedName(idx),
+            ageYears: getFixedAge(idx)
+        }));
+        
+        // 更新统计显示
+        function updateStats() {
+            const groupCnt = {0:0,1:0,2:0,3:0};
+            allData.forEach(d => groupCnt[d.group]++);
+            document.getElementById('total-count').innerText = allData.length;
+            document.getElementById('stats-info').innerHTML = `📈 样本总数: ${allData.length} | 正常:${groupCnt[0]} 轻度:${groupCnt[1]} 中度:${groupCnt[2]} 重度:${groupCnt[3]}`;
+        }
+        updateStats();
+        
+        // 新配色方案 (柔和科技感)
+        const groupColorMap = {
+            0: '#4ade80', // 翠绿
+            1: '#60a5fa', // 天蓝
+            2: '#fbbf24', // 琥珀
+            3: '#f87171'  // 珊瑚
+        };
+        const groupNameMap = {
+            0: "正常 (DQ ≥ 85)",
+            1: "轻度发育不良 (70 ≤ DQ < 85)",
+            2: "中度发育不良 (55 ≤ DQ < 70)",
+            3: "重度发育不良 (DQ < 55)"
+        };
+        
+        // ---------- 2. Three场景初始化 ----------
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050b1a);
+        scene.fog = new THREE.FogExp2(0x050b1a, 0.008);
+        
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(4.8, 4.2, 5.8);
+        camera.lookAt(0, 0, 0);
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+        
+        // 轨道控制 + 自动旋转
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.06;
+        controls.rotateSpeed = 1.2;
+        controls.zoomSpeed = 1.2;
+        controls.enableZoom = true;
+        controls.enablePan = true;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 1.5;
+        controls.target.set(0, 0, 0);
+        
+        let autoRotateTimeout = null;
+        const resetAutoRotate = () => {
+            if (autoRotateTimeout) clearTimeout(autoRotateTimeout);
+            if (!controls.autoRotate) {
+                autoRotateTimeout = setTimeout(() => {
+                    controls.autoRotate = true;
+                    autoRotateTimeout = null;
+                }, 2800);
+            }
+        };
+        controls.addEventListener('start', () => {
+            if (controls.autoRotate) controls.autoRotate = false;
+            resetAutoRotate();
+        });
+        controls.addEventListener('end', resetAutoRotate);
+        
+        // 光源系统 (增强立体感)
+        const ambientLight = new THREE.AmbientLight(0x2c3e50, 0.55);
+        scene.add(ambientLight);
+        const mainLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        mainLight.position.set(2, 3, 4);
+        scene.add(mainLight);
+        const fillLight = new THREE.PointLight(0x4466cc, 0.5);
+        fillLight.position.set(-1, 1, 2);
+        scene.add(fillLight);
+        const backLight = new THREE.PointLight(0xffaa66, 0.4);
+        backLight.position.set(0, 1, -3);
+        scene.add(backLight);
+        const rimLight = new THREE.PointLight(0x88aaff, 0.6);
+        rimLight.position.set(1.5, 1.8, -2);
+        scene.add(rimLight);
+        
+        // 装饰星空
+        const starGeo = new THREE.BufferGeometry();
+        const starCount = 2000;
+        const starPos = new Float32Array(starCount * 3);
+        for (let i = 0; i < starCount; i++) {
+            starPos[i*3] = (Math.random() - 0.5) * 300;
+            starPos[i*3+1] = (Math.random() - 0.5) * 180;
+            starPos[i*3+2] = (Math.random() - 0.5) * 150 - 50;
+        }
+        starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+        const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.12, transparent: true, opacity: 0.6 });
+        const stars = new THREE.Points(starGeo, starMat);
+        scene.add(stars);
+        
+        // 球体参考线框 (半径3.2，容纳所有点)
+        const sphereWireGeo = new THREE.SphereGeometry(3.2, 48, 24);
+        const wireMat = new THREE.MeshBasicMaterial({ color: 0x3a86ff, wireframe: true, transparent: true, opacity: 0.12 });
+        const wireframeSphere = new THREE.Mesh(sphereWireGeo, wireMat);
+        scene.add(wireframeSphere);
+        
+        // 外发光球体
+        const glowGeo = new THREE.SphereGeometry(3.35, 32, 16);
+        const glowMat = new THREE.MeshBasicMaterial({ color: 0x2277cc, transparent: true, opacity: 0.03, side: THREE.BackSide });
+        const glowSphere = new THREE.Mesh(glowGeo, glowMat);
+        scene.add(glowSphere);
+        
+        // 漂浮粒子云 (增强氛围)
+        const dustCount = 1500;
+        const dustGeo = new THREE.BufferGeometry();
+        const dustPosArr = new Float32Array(dustCount * 3);
+        for (let i=0; i<dustCount; i++) {
+            const rad = 3.0 + Math.random() * 0.9;
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+            dustPosArr[i*3] = rad * Math.sin(phi) * Math.cos(theta);
+            dustPosArr[i*3+1] = rad * Math.sin(phi) * Math.sin(theta);
+            dustPosArr[i*3+2] = rad * Math.cos(phi);
+        }
+        dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPosArr, 3));
+        const dustMat = new THREE.PointsMaterial({ color: 0x88bbff, size: 0.02, transparent: true, opacity: 0.2 });
+        const dustCloud = new THREE.Points(dustGeo, dustMat);
+        scene.add(dustCloud);
+        
+        // 半透明坐标轴
+        const axesHelper = new THREE.AxesHelper(4);
+        axesHelper.material.transparent = true;
+        axesHelper.material.opacity = 0.12;
+        scene.add(axesHelper);
+        
+        // ---------- 3. 创建点云 (只有小球体，无文字标签) ----------
+        let allMeshes = [];      // 存储小球体Mesh
+        let currentSelected = null;
+        
+        // 创建单个点 (球体)
+        function createPointMesh(dataPoint) {
+            const colorHex = groupColorMap[dataPoint.group];
+            const material = new THREE.MeshStandardMaterial({
+                color: colorHex,
+                emissive: 0x222222,
+                emissiveIntensity: 0.2,
+                roughness: 0.3,
+                metalness: 0.1,
+                flatShading: false
+            });
+            // 点半径缩小为 0.06 (之前 0.095)
+            const geometry = new THREE.SphereGeometry(0.06, 20, 20);
+            const sphere = new THREE.Mesh(geometry, material);
+            sphere.position.set(dataPoint.x, dataPoint.y, dataPoint.z);
+            sphere.userData = { pointData: dataPoint };
+            scene.add(sphere);
+            return sphere;
+        }
+        
+        // 高亮选中的点
+        function highlightPoint(point) {
+            if (currentSelected === point) return;
+            // 恢复之前高亮的点
+            if (currentSelected && currentSelected.material) {
+                const origColor = groupColorMap[currentSelected.userData.pointData.group];
+                currentSelected.material.color.set(origColor);
+                currentSelected.material.emissiveIntensity = 0.2;
+                currentSelected.scale.set(1, 1, 1);
+            }
+            currentSelected = point;
+            if (point && point.material) {
+                point.material.color.setHex(0xffaa66);
+                point.material.emissiveIntensity = 0.6;
+                point.scale.set(1.25, 1.25, 1.25);
+            }
+        }
+        
+        // 更新信息面板
+        function updateInfoPanel(pointData) {
+            const panel = document.getElementById('data-panel');
+            const groupColor = groupColorMap[pointData.group];
+            const months = ageToMonths(pointData.ageYears);
+            panel.innerHTML = `
+                <h3>👶 ${pointData.name}  (${months}个月)</h3>
+                <p><span class="data-label">🎯 主成分1:</span> ${pointData.x.toFixed(4)}</p>
+                <p><span class="data-label">📐 主成分2:</span> ${pointData.y.toFixed(4)}</p>
+                <p><span class="data-label">📊 主成分3:</span> ${pointData.z.toFixed(4)}</p>
+                <p><span class="data-label">🏷️ 发育分组:</span> <strong style="color:${groupColor}">Group ${pointData.group}</strong> 
+                <span class="badge">${groupNameMap[pointData.group]}</span></p>
+                <p><span class="data-label">📖 评估:</span> ${pointData.group === 0 ? '发育商正常，整体发育水平良好。' : (pointData.group === 1 ? '轻度发育迟缓，建议早期干预。' : (pointData.group === 2 ? '中度发育不良，需综合康复训练。' : '重度发育迟缓，及时医疗介入。'))}</p>
+                <div class="stats">🧸 月龄 ${months}个月 | 坐标 ${pointData.x.toFixed(2)}, ${pointData.y.toFixed(2)}, ${pointData.z.toFixed(2)}</div>
+            `;
+        }
+        
+        // 批量加载所有点
+        function loadAllPoints() {
+            allMeshes.forEach(mesh => scene.remove(mesh));
+            allMeshes = [];
+            allData.forEach(d => {
+                const mesh = createPointMesh(d);
+                allMeshes.push(mesh);
+            });
+            updateStats();
+            // 默认选中第一个点
+            if (allMeshes.length > 0) {
+                highlightPoint(allMeshes[0]);
+                updateInfoPanel(allMeshes[0].userData.pointData);
+            }
+        }
+        
+        loadAllPoints();
+        
+        // 射线检测点击
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        
+        window.addEventListener('click', (event) => {
+            // 计算鼠标位置归一化坐标
+            mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
+            mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(allMeshes);
+            if (intersects.length > 0) {
+                const clicked = intersects[0].object;
+                highlightPoint(clicked);
+                updateInfoPanel(clicked.userData.pointData);
+            }
+        });
+        
+        // 添加新数据（支持CSV追加），年龄列应为岁数，自动转换为月份显示
+        function addNewDataFromCSV(csvText) {
+            const lines = csvText.trim().split(/\r?\n/);
+            const header = lines[0].toLowerCase().split(',');
+            const idxF1 = header.indexOf('fac1_1');
+            const idxF2 = header.indexOf('fac2_1');
+            const idxF3 = header.indexOf('fac3_1');
+            const idxGroup = header.indexOf('group');
+            const idxAge = header.indexOf('age');
+            const idxName = header.indexOf('name');
+            if (idxF1 === -1 || idxF2 === -1 || idxF3 === -1 || idxGroup === -1 || idxAge === -1 || idxName === -1) {
+                alert("CSV格式错误，需要包含列：FAC1_1, FAC2_1, FAC3_1, Group, Age, Name");
+                return;
+            }
+            let added = 0;
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                const vals = line.split(',');
+                if (vals.length < 6) continue;
+                const x = parseFloat(vals[idxF1]);
+                const y = parseFloat(vals[idxF2]);
+                const z = parseFloat(vals[idxF3]);
+                const group = parseInt(vals[idxGroup], 10);
+                const ageYears = parseFloat(vals[idxAge]);
+                const name = vals[idxName].trim();
+                if (isNaN(x) || isNaN(y) || isNaN(z) || isNaN(group) || isNaN(ageYears) || !name) continue;
+                // 检查坐标是否超出球体范围
+                if (Math.abs(x) > 3.5 || Math.abs(y) > 3.5 || Math.abs(z) > 3.5) {
+                    console.warn(`点 ${name} 坐标超出范围，已忽略`);
+                    continue;
+                }
+                // 简单去重
+                const exists = allData.some(d => d.name === name && Math.abs(d.x - x) < 0.01);
+                if (exists) {
+                    console.warn(`点 ${name} 已存在，跳过`);
+                    continue;
+                }
+                const newPoint = { x, y, z, group, name, ageYears };
+                allData.push(newPoint);
+                const newMesh = createPointMesh(newPoint);
+                allMeshes.push(newMesh);
+                added++;
+            }
+            if (added > 0) {
+                updateStats();
+                alert(`成功添加 ${added} 条新数据！`);
+                // 可选：重新高亮第一个点（但用户可能想保留原选中，不做自动切换）
+            } else {
+                alert("未检测到有效新数据，请检查CSV格式。");
+            }
+        }
+        
+        // 上传CSV事件
+        document.getElementById('uploadBtn').addEventListener('click', () => {
+            const fileInput = document.getElementById('csvUpload');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert("请先选择一个CSV文件");
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const content = e.target.result;
+                addNewDataFromCSV(content);
+                fileInput.value = '';
+            };
+            reader.readAsText(file, 'UTF-8');
+        });
+        
+        // 辅助动画
+        let time = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.012;
+            controls.update();
+            stars.rotation.y += 0.0005;
+            stars.rotation.x += 0.0003;
+            dustCloud.rotation.y += 0.0007;
+            dustCloud.rotation.x += 0.0004;
+            wireframeSphere.rotation.y += 0.0003;
+            glowSphere.rotation.y -= 0.0002;
+            fillLight.intensity = 0.55 + Math.sin(time) * 0.08;
+            rimLight.intensity = 0.6 + Math.cos(time * 0.9) * 0.1;
+            renderer.render(scene, camera);
+        }
+        animate();
+        
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        console.log(`初始化完成，共 ${allData.length} 个儿童数据，点半径0.06，月龄范围1~72个月。`);
+    </script>
+</body>
+</html>
