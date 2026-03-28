@@ -2,87 +2,130 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>0-6岁发育不良儿童数据三维云球 | PCA发育分析</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
             font-family: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', Roboto, sans-serif;
+            touch-action: none; /* 优化触摸操作 */
         }
-        /* 控制面板 */
+        /* 折叠面板样式 */
         .control-panel {
             position: fixed;
             bottom: 20px;
             left: 20px;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 12px 20px;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
             color: white;
             z-index: 200;
             font-size: 13px;
             border: 1px solid rgba(255,255,255,0.2);
             pointer-events: auto;
             font-family: monospace;
-            max-width: 260px;
+            max-width: 280px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            cursor: pointer;
+            user-select: none;
+            font-weight: 600;
+            background: rgba(0,0,0,0.4);
+            border-radius: 20px;
+        }
+        .panel-header:hover {
+            background: rgba(50,70,100,0.5);
+        }
+        .panel-header span {
+            font-size: 14px;
+        }
+        .toggle-icon {
+            font-size: 18px;
+            transition: transform 0.3s;
+        }
+        .panel-content {
+            padding: 0 16px 16px 16px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .control-panel.open .panel-content {
+            max-height: 200px; /* 足够容纳内容 */
+            padding: 0 16px 16px 16px;
+        }
+        .control-panel.open .toggle-icon {
+            transform: rotate(180deg);
         }
         .control-panel input {
-            margin: 5px 0;
-            padding: 5px 8px;
-            border-radius: 8px;
+            margin: 8px 0;
+            padding: 8px 10px;
+            border-radius: 12px;
             border: none;
             background: #2d3748;
             color: white;
             width: 100%;
             cursor: pointer;
+            font-size: 13px;
+            box-sizing: border-box;
         }
         .control-panel button {
             margin-top: 8px;
             background: #3b82f6;
             border: none;
-            padding: 6px 12px;
-            border-radius: 20px;
+            padding: 8px 12px;
+            border-radius: 30px;
             color: white;
             cursor: pointer;
             font-weight: bold;
             width: 100%;
+            font-size: 14px;
+            transition: background 0.2s;
         }
         .control-panel button:hover {
             background: #2563eb;
         }
         .control-panel p {
-            margin: 5px 0;
+            margin: 6px 0;
             font-size: 11px;
             color: #ccc;
+            line-height: 1.3;
         }
         .info-panel {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            width: 300px;
-            background: rgba(15, 25, 45, 0.85);
+            width: 280px;
+            background: rgba(15, 25, 45, 0.88);
             backdrop-filter: blur(12px);
-            border-radius: 16px;
-            padding: 16px 20px;
+            border-radius: 20px;
+            padding: 14px 18px;
             color: #eef4ff;
             border-left: 4px solid #3b82f6;
             box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-            font-size: 13px;
+            font-size: 12px;
             pointer-events: none;
             z-index: 100;
             font-weight: 400;
+            max-height: 60vh;
+            overflow-y: auto;
         }
         .info-panel h3 {
-            margin: 0 0 10px 0;
-            font-size: 18px;
+            margin: 0 0 8px 0;
+            font-size: 16px;
             color: #7aaef0;
             border-bottom: 1px solid rgba(255,255,255,0.2);
             padding-bottom: 6px;
         }
         .info-panel p {
-            margin: 8px 0;
-            line-height: 1.45;
+            margin: 6px 0;
+            line-height: 1.4;
         }
         .info-panel .data-label {
             font-weight: 600;
@@ -94,7 +137,7 @@
             display: inline-block;
             padding: 2px 8px;
             border-radius: 20px;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: bold;
             margin-left: 6px;
             background: #1e293b;
@@ -105,29 +148,29 @@
             left: 20px;
             background: rgba(0,0,0,0.65);
             backdrop-filter: blur(8px);
-            padding: 12px 18px;
+            padding: 10px 14px;
             border-radius: 20px;
             color: white;
-            font-size: 12px;
+            font-size: 11px;
             font-family: monospace;
             z-index: 100;
             border: 1px solid rgba(255,255,255,0.2);
             pointer-events: none;
         }
         .legend h4 {
-            margin: 0 0 8px 0;
-            font-size: 14px;
+            margin: 0 0 6px 0;
+            font-size: 12px;
             text-align: center;
         }
         .legend-item {
             display: flex;
             align-items: center;
-            margin-bottom: 5px;
-            gap: 10px;
+            margin-bottom: 4px;
+            gap: 8px;
         }
         .legend-color {
-            width: 16px;
-            height: 16px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
         }
         .instruction {
@@ -136,10 +179,10 @@
             right: 20px;
             background: rgba(0,0,0,0.55);
             backdrop-filter: blur(5px);
-            padding: 6px 14px;
+            padding: 5px 12px;
             border-radius: 24px;
             color: #ddd;
-            font-size: 12px;
+            font-size: 10px;
             font-family: monospace;
             pointer-events: none;
             z-index: 100;
@@ -150,56 +193,113 @@
             left: 50%;
             transform: translateX(-50%);
             background: rgba(0,0,0,0.7);
-            padding: 8px 20px;
+            padding: 6px 16px;
             border-radius: 40px;
             color: #fff;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             backdrop-filter: blur(8px);
             pointer-events: none;
             z-index: 100;
             white-space: nowrap;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
             border-bottom: 2px solid #3b82f6;
         }
         .stats {
-            font-size: 11px;
+            font-size: 10px;
             color: #aac8ff;
-            margin-top: 8px;
+            margin-top: 6px;
             border-top: 1px solid #334155;
-            padding-top: 6px;
+            padding-top: 5px;
         }
+        /* 手机适配优化 */
         @media (max-width: 600px) {
-            .info-panel { width: 260px; padding: 12px 16px; bottom: 12px; right: 12px; font-size: 11px; }
-            .legend { font-size: 10px; padding: 8px 12px; top: 70px; left: 10px; }
-            .title-card { font-size: 12px; top: 12px; white-space: nowrap; padding: 5px 12px; }
-            .control-panel { bottom: 12px; left: 12px; padding: 8px 12px; max-width: 220px; }
+            .info-panel {
+                width: 240px;
+                padding: 10px 14px;
+                bottom: 12px;
+                right: 12px;
+                font-size: 11px;
+                max-height: 50vh;
+            }
+            .info-panel h3 {
+                font-size: 14px;
+            }
+            .legend {
+                top: 12px;
+                left: 12px;
+                padding: 6px 10px;
+                font-size: 9px;
+            }
+            .legend-item {
+                gap: 6px;
+            }
+            .title-card {
+                font-size: 11px;
+                top: 12px;
+                padding: 4px 12px;
+                white-space: nowrap;
+            }
+            .instruction {
+                top: 12px;
+                right: 12px;
+                font-size: 9px;
+                padding: 4px 10px;
+            }
+            .control-panel {
+                bottom: 12px;
+                left: 12px;
+                max-width: 240px;
+                font-size: 11px;
+            }
+            .panel-header {
+                padding: 8px 12px;
+            }
+            .panel-header span {
+                font-size: 12px;
+            }
+            .control-panel button {
+                font-size: 12px;
+                padding: 6px 10px;
+            }
+            .control-panel input {
+                font-size: 12px;
+                padding: 6px 8px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="title-card">🧸 0-6岁发育不良儿童数据三维云球</div>
     <div class="instruction">
-        🖱️ 拖拽旋转 | 自动旋转 | 点击数据点查看详情
+        🖱️ 拖拽旋转 | 自动旋转 | 点击点查看详情
     </div>
     <div class="legend">
-        <h4>📊 发育不良程度 (Group)</h4>
-        <div class="legend-item"><div class="legend-color" style="background: #4ade80;"></div><span>0 - 正常 (DQ ≥ 85)</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: #60a5fa;"></div><span>1 - 轻度 (70 ≤ DQ < 85)</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: #fbbf24;"></div><span>2 - 中度 (55 ≤ DQ < 70)</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: #f87171;"></div><span>3 - 重度 (DQ < 55)</span></div>
-        <div class="stats" id="stats-info">加载数据中...</div>
+        <h4>📊 发育不良程度</h4>
+        <div class="legend-item"><div class="legend-color" style="background: #4ade80;"></div><span>0-正常</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #60a5fa;"></div><span>1-轻度</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #fbbf24;"></div><span>2-中度</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #f87171;"></div><span>3-重度</span></div>
+        <div class="stats" id="stats-info">加载中...</div>
     </div>
-    <div class="control-panel">
-        <p>📂 添加新儿童数据 (CSV)</p>
-        <input type="file" id="csvUpload" accept=".csv">
-        <button id="uploadBtn">上传并添加到云球</button>
-        <p style="font-size:10px; margin-top:5px;">CSV需包含列：FAC1_1,FAC2_1,FAC3_1,Group,Age,Name<br>Age为岁数(0.1~6.0)，将自动转换为月份</p>
+    
+    <!-- 可折叠的控制面板 -->
+    <div class="control-panel" id="controlPanel">
+        <div class="panel-header" id="panelHeader">
+            <span>📂 添加新数据 (CSV)</span>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="panel-content">
+            <input type="file" id="csvUpload" accept=".csv">
+            <button id="uploadBtn">上传并添加到云球</button>
+            <p>CSV需包含列：FAC1_1,FAC2_1,FAC3_1,Group,Age,Name<br>Age为岁数(0.1~6.0)，自动转月份</p>
+        </div>
     </div>
+    
     <div id="data-panel" class="info-panel">
         <h3>👶 儿童数据详情</h3>
         <p>✨ 点击任意数据点，查看该儿童的发育评估与月龄</p>
-        <p style="font-size:12px;">共 <strong id="total-count">0</strong> 个样本</p>
+        <p style="font-size:11px;">共 <strong id="total-count">0</strong> 个样本</p>
         <div class="stats">🧠 PCA主成分空间 | 球体半径3.2 | 月龄1~72个月</div>
     </div>
 
@@ -440,7 +540,7 @@
 
         const basePoints = parseBaseCSV(csvRaw);
         
-        // 生成不重复姓名 (用于内置数据)
+        // 生成不重复姓名
         const surnames = ["李","王","张","刘","陈","杨","赵","周","吴","徐","孙","马","朱","林","郭","何","高","郑","罗","梁","谢","宋","唐","许","韩","冯","邓","曹","彭","曾","肖","田","董","潘","袁","蔡","蒋","余","杜","叶","苏","魏","吕","丁","沈","任","姚","卢","姜","崔","钟","谭","陆","汪","范","金","石","廖","贾","夏"];
         const givenNames = ["伟","芳","强","丽","明","华","静","磊","婷","宇","欣","杰","宁","艳","涛","娜","军","勇","敏","晨","曦","昊","然","子涵","雨桐","一诺","铭泽","思琪","沐阳","若溪","宇航","梓萱","逸飞","婉清","致远","沐晴","俊宇","雨萱","天佑","梓涵","子轩","语嫣"];
         
@@ -455,41 +555,36 @@
             return name;
         }
         
-        // 年龄生成：0.1 到 6.0 岁，避免0岁，确保月龄至少1个月
         function getFixedAge(index) {
             const seed = (index * 131071) % 1000;
-            const age = 0.1 + (seed / 1000) * 5.9; // 0.1 ~ 6.0
+            const age = 0.1 + (seed / 1000) * 5.9;
             return Math.round(age * 10) / 10;
         }
         
-        // 将岁转换为月份显示（四舍五入取整）
         function ageToMonths(ageYears) {
             const months = Math.round(ageYears * 12);
             return months === 0 ? 1 : months;
         }
         
-        // 构建完整数据列表
         let allData = basePoints.map((p, idx) => ({
             ...p,
             name: getFixedName(idx),
             ageYears: getFixedAge(idx)
         }));
         
-        // 更新统计显示
         function updateStats() {
             const groupCnt = {0:0,1:0,2:0,3:0};
             allData.forEach(d => groupCnt[d.group]++);
             document.getElementById('total-count').innerText = allData.length;
-            document.getElementById('stats-info').innerHTML = `📈 样本总数: ${allData.length} | 正常:${groupCnt[0]} 轻度:${groupCnt[1]} 中度:${groupCnt[2]} 重度:${groupCnt[3]}`;
+            document.getElementById('stats-info').innerHTML = `📈 总数:${allData.length} 正常:${groupCnt[0]} 轻:${groupCnt[1]} 中:${groupCnt[2]} 重:${groupCnt[3]}`;
         }
         updateStats();
         
-        // 新配色方案 (柔和科技感)
         const groupColorMap = {
-            0: '#4ade80', // 翠绿
-            1: '#60a5fa', // 天蓝
-            2: '#fbbf24', // 琥珀
-            3: '#f87171'  // 珊瑚
+            0: '#4ade80',
+            1: '#60a5fa',
+            2: '#fbbf24',
+            3: '#f87171'
         };
         const groupNameMap = {
             0: "正常 (DQ ≥ 85)",
@@ -498,7 +593,7 @@
             3: "重度发育不良 (DQ < 55)"
         };
         
-        // ---------- 2. Three场景初始化 ----------
+        // ---------- 2. Three场景 ----------
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x050b1a);
         scene.fog = new THREE.FogExp2(0x050b1a, 0.008);
@@ -512,16 +607,15 @@
         renderer.setPixelRatio(window.devicePixelRatio);
         document.body.appendChild(renderer.domElement);
         
-        // 轨道控制 + 自动旋转
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.dampingFactor = 0.06;
-        controls.rotateSpeed = 1.2;
-        controls.zoomSpeed = 1.2;
+        controls.rotateSpeed = 1.0;
+        controls.zoomSpeed = 1.0;
         controls.enableZoom = true;
         controls.enablePan = true;
         controls.autoRotate = true;
-        controls.autoRotateSpeed = 1.5;
+        controls.autoRotateSpeed = 1.3;
         controls.target.set(0, 0, 0);
         
         let autoRotateTimeout = null;
@@ -540,7 +634,7 @@
         });
         controls.addEventListener('end', resetAutoRotate);
         
-        // 光源系统 (增强立体感)
+        // 光源
         const ambientLight = new THREE.AmbientLight(0x2c3e50, 0.55);
         scene.add(ambientLight);
         const mainLight = new THREE.DirectionalLight(0xffffff, 1.2);
@@ -556,9 +650,9 @@
         rimLight.position.set(1.5, 1.8, -2);
         scene.add(rimLight);
         
-        // 装饰星空
+        // 星空
         const starGeo = new THREE.BufferGeometry();
-        const starCount = 2000;
+        const starCount = 1500;
         const starPos = new Float32Array(starCount * 3);
         for (let i = 0; i < starCount; i++) {
             starPos[i*3] = (Math.random() - 0.5) * 300;
@@ -570,20 +664,20 @@
         const stars = new THREE.Points(starGeo, starMat);
         scene.add(stars);
         
-        // 球体参考线框 (半径3.2，容纳所有点)
+        // 球体线框
         const sphereWireGeo = new THREE.SphereGeometry(3.2, 48, 24);
         const wireMat = new THREE.MeshBasicMaterial({ color: 0x3a86ff, wireframe: true, transparent: true, opacity: 0.12 });
         const wireframeSphere = new THREE.Mesh(sphereWireGeo, wireMat);
         scene.add(wireframeSphere);
         
-        // 外发光球体
+        // 外发光
         const glowGeo = new THREE.SphereGeometry(3.35, 32, 16);
         const glowMat = new THREE.MeshBasicMaterial({ color: 0x2277cc, transparent: true, opacity: 0.03, side: THREE.BackSide });
         const glowSphere = new THREE.Mesh(glowGeo, glowMat);
         scene.add(glowSphere);
         
-        // 漂浮粒子云 (增强氛围)
-        const dustCount = 1500;
+        // 漂浮粒子
+        const dustCount = 1200;
         const dustGeo = new THREE.BufferGeometry();
         const dustPosArr = new Float32Array(dustCount * 3);
         for (let i=0; i<dustCount; i++) {
@@ -599,17 +693,15 @@
         const dustCloud = new THREE.Points(dustGeo, dustMat);
         scene.add(dustCloud);
         
-        // 半透明坐标轴
         const axesHelper = new THREE.AxesHelper(4);
         axesHelper.material.transparent = true;
-        axesHelper.material.opacity = 0.12;
+        axesHelper.material.opacity = 0.1;
         scene.add(axesHelper);
         
-        // ---------- 3. 创建点云 (只有小球体，无文字标签) ----------
-        let allMeshes = [];      // 存储小球体Mesh
+        // ---------- 3. 点云 ----------
+        let allMeshes = [];
         let currentSelected = null;
         
-        // 创建单个点 (球体)
         function createPointMesh(dataPoint) {
             const colorHex = groupColorMap[dataPoint.group];
             const material = new THREE.MeshStandardMaterial({
@@ -617,11 +709,10 @@
                 emissive: 0x222222,
                 emissiveIntensity: 0.2,
                 roughness: 0.3,
-                metalness: 0.1,
-                flatShading: false
+                metalness: 0.1
             });
-            // 点半径缩小为 0.06 (之前 0.095)
-            const geometry = new THREE.SphereGeometry(0.06, 20, 20);
+            // 点半径手机优化：0.07 (略大于之前的0.06，更易点击)
+            const geometry = new THREE.SphereGeometry(0.07, 20, 20);
             const sphere = new THREE.Mesh(geometry, material);
             sphere.position.set(dataPoint.x, dataPoint.y, dataPoint.z);
             sphere.userData = { pointData: dataPoint };
@@ -629,10 +720,8 @@
             return sphere;
         }
         
-        // 高亮选中的点
         function highlightPoint(point) {
             if (currentSelected === point) return;
-            // 恢复之前高亮的点
             if (currentSelected && currentSelected.material) {
                 const origColor = groupColorMap[currentSelected.userData.pointData.group];
                 currentSelected.material.color.set(origColor);
@@ -647,24 +736,22 @@
             }
         }
         
-        // 更新信息面板
         function updateInfoPanel(pointData) {
             const panel = document.getElementById('data-panel');
             const groupColor = groupColorMap[pointData.group];
             const months = ageToMonths(pointData.ageYears);
             panel.innerHTML = `
                 <h3>👶 ${pointData.name}  (${months}个月)</h3>
-                <p><span class="data-label">🎯 主成分1:</span> ${pointData.x.toFixed(4)}</p>
-                <p><span class="data-label">📐 主成分2:</span> ${pointData.y.toFixed(4)}</p>
-                <p><span class="data-label">📊 主成分3:</span> ${pointData.z.toFixed(4)}</p>
-                <p><span class="data-label">🏷️ 发育分组:</span> <strong style="color:${groupColor}">Group ${pointData.group}</strong> 
+                <p><span class="data-label">🎯 PC1:</span> ${pointData.x.toFixed(4)}</p>
+                <p><span class="data-label">📐 PC2:</span> ${pointData.y.toFixed(4)}</p>
+                <p><span class="data-label">📊 PC3:</span> ${pointData.z.toFixed(4)}</p>
+                <p><span class="data-label">🏷️ 分组:</span> <strong style="color:${groupColor}">Group ${pointData.group}</strong> 
                 <span class="badge">${groupNameMap[pointData.group]}</span></p>
-                <p><span class="data-label">📖 评估:</span> ${pointData.group === 0 ? '发育商正常，整体发育水平良好。' : (pointData.group === 1 ? '轻度发育迟缓，建议早期干预。' : (pointData.group === 2 ? '中度发育不良，需综合康复训练。' : '重度发育迟缓，及时医疗介入。'))}</p>
+                <p><span class="data-label">📖 评估:</span> ${pointData.group === 0 ? '发育商正常。' : (pointData.group === 1 ? '轻度发育迟缓。' : (pointData.group === 2 ? '中度发育不良。' : '重度发育迟缓。'))}</p>
                 <div class="stats">🧸 月龄 ${months}个月 | 坐标 ${pointData.x.toFixed(2)}, ${pointData.y.toFixed(2)}, ${pointData.z.toFixed(2)}</div>
             `;
         }
         
-        // 批量加载所有点
         function loadAllPoints() {
             allMeshes.forEach(mesh => scene.remove(mesh));
             allMeshes = [];
@@ -673,7 +760,6 @@
                 allMeshes.push(mesh);
             });
             updateStats();
-            // 默认选中第一个点
             if (allMeshes.length > 0) {
                 highlightPoint(allMeshes[0]);
                 updateInfoPanel(allMeshes[0].userData.pointData);
@@ -682,14 +768,13 @@
         
         loadAllPoints();
         
-        // 射线检测点击
+        // 射线检测
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
-        
         window.addEventListener('click', (event) => {
-            // 计算鼠标位置归一化坐标
-            mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
-            mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
             raycaster.setFromCamera(mouse, camera);
             const intersects = raycaster.intersectObjects(allMeshes);
             if (intersects.length > 0) {
@@ -699,7 +784,7 @@
             }
         });
         
-        // 添加新数据（支持CSV追加），年龄列应为岁数，自动转换为月份显示
+        // 添加新数据
         function addNewDataFromCSV(csvText) {
             const lines = csvText.trim().split(/\r?\n/);
             const header = lines[0].toLowerCase().split(',');
@@ -726,12 +811,10 @@
                 const ageYears = parseFloat(vals[idxAge]);
                 const name = vals[idxName].trim();
                 if (isNaN(x) || isNaN(y) || isNaN(z) || isNaN(group) || isNaN(ageYears) || !name) continue;
-                // 检查坐标是否超出球体范围
                 if (Math.abs(x) > 3.5 || Math.abs(y) > 3.5 || Math.abs(z) > 3.5) {
                     console.warn(`点 ${name} 坐标超出范围，已忽略`);
                     continue;
                 }
-                // 简单去重
                 const exists = allData.some(d => d.name === name && Math.abs(d.x - x) < 0.01);
                 if (exists) {
                     console.warn(`点 ${name} 已存在，跳过`);
@@ -746,13 +829,12 @@
             if (added > 0) {
                 updateStats();
                 alert(`成功添加 ${added} 条新数据！`);
-                // 可选：重新高亮第一个点（但用户可能想保留原选中，不做自动切换）
             } else {
                 alert("未检测到有效新数据，请检查CSV格式。");
             }
         }
         
-        // 上传CSV事件
+        // 上传事件
         document.getElementById('uploadBtn').addEventListener('click', () => {
             const fileInput = document.getElementById('csvUpload');
             const file = fileInput.files[0];
@@ -769,7 +851,14 @@
             reader.readAsText(file, 'UTF-8');
         });
         
-        // 辅助动画
+        // 折叠面板交互
+        const panel = document.getElementById('controlPanel');
+        const header = document.getElementById('panelHeader');
+        header.addEventListener('click', () => {
+            panel.classList.toggle('open');
+        });
+        
+        // 动画循环
         let time = 0;
         function animate() {
             requestAnimationFrame(animate);
@@ -777,7 +866,7 @@
             controls.update();
             stars.rotation.y += 0.0005;
             stars.rotation.x += 0.0003;
-            dustCloud.rotation.y += 0.0007;
+            dustCloud.rotation.y += 0.0006;
             dustCloud.rotation.x += 0.0004;
             wireframeSphere.rotation.y += 0.0003;
             glowSphere.rotation.y -= 0.0002;
@@ -793,7 +882,7 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
         
-        console.log(`初始化完成，共 ${allData.length} 个儿童数据，点半径0.06，月龄范围1~72个月。`);
+        console.log(`初始化完成，共 ${allData.length} 个儿童数据，点半径0.07，月龄1~72个月，支持手机触摸。`);
     </script>
 </body>
 </html>
