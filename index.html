@@ -1,3 +1,12 @@
+以下是最终优化版本，专为手机触摸和显示进行深度适配：
+
+- **布局简洁无遮挡**：所有面板位于边角，中心区域完全留给三维球体
+- **点击精准有效**：canvas 全屏覆盖，信息面板和图例不拦截点击事件
+- **控制面板默认折叠**，展开时向上弹出，不影响底部操作
+- **初始无数据**：信息面板仅显示“点击数据点查看详情”，点击后才展示具体信息
+- **安全区适配**：完美支持刘海屏等异形屏
+
+```html
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -12,28 +21,36 @@
         }
         body {
             overflow: hidden;
-            font-family: system-ui, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', Roboto, sans-serif;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
             touch-action: none;
             background: #000;
         }
-        /* 全局安全区适配 */
-        :root {
-            --safe-top: env(safe-area-inset-top, 12px);
-            --safe-bottom: env(safe-area-inset-bottom, 12px);
-            --safe-left: env(safe-area-inset-left, 12px);
-            --safe-right: env(safe-area-inset-right, 12px);
+        /* 确保 canvas 接收所有触摸事件 */
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
         }
-        /* 标题 - 增加安全区，更靠下 */
+        /* 所有面板默认不拦截点击 */
+        .panel {
+            pointer-events: none;
+        }
+        /* 需要点击的控件单独开启 */
+        .clickable {
+            pointer-events: auto;
+        }
+        /* 标题 - 顶部居中 */
         .title-card {
             position: fixed;
-            top: calc(var(--safe-top) + 8px);
+            top: max(12px, env(safe-area-inset-top, 12px));
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0,0,0,0.75);
-            backdrop-filter: blur(10px);
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(12px);
             padding: 6px 16px;
             border-radius: 40px;
-            color: #fff;
+            color: white;
             font-size: 14px;
             font-weight: 600;
             white-space: nowrap;
@@ -43,11 +60,11 @@
             pointer-events: none;
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
-        /* 简短的说明文字 */
+        /* 简短提示 */
         .instruction {
             position: fixed;
-            top: calc(var(--safe-top) + 12px);
-            right: calc(var(--safe-right) + 8px);
+            top: max(12px, env(safe-area-inset-top, 12px));
+            right: max(12px, env(safe-area-inset-right, 12px));
             background: rgba(0,0,0,0.6);
             backdrop-filter: blur(4px);
             padding: 4px 10px;
@@ -57,11 +74,11 @@
             pointer-events: none;
             z-index: 300;
         }
-        /* 图例 - 左上角，紧凑 */
+        /* 图例 - 左下角紧凑 */
         .legend {
             position: fixed;
-            top: calc(var(--safe-top) + 12px);
-            left: calc(var(--safe-left) + 8px);
+            bottom: max(12px, env(safe-area-inset-bottom, 12px));
+            left: max(12px, env(safe-area-inset-left, 12px));
             background: rgba(0,0,0,0.7);
             backdrop-filter: blur(8px);
             padding: 6px 10px;
@@ -98,10 +115,10 @@
         /* 信息面板 - 右下角，初始简洁 */
         .info-panel {
             position: fixed;
-            bottom: calc(var(--safe-bottom) + 12px);
-            right: calc(var(--safe-right) + 8px);
+            bottom: max(12px, env(safe-area-inset-bottom, 12px));
+            right: max(12px, env(safe-area-inset-right, 12px));
             width: 240px;
-            max-height: 42vh;
+            max-height: 40vh;
             overflow-y: auto;
             background: rgba(15, 25, 45, 0.88);
             backdrop-filter: blur(12px);
@@ -137,31 +154,35 @@
             background: #1e293b;
             margin-left: 5px;
         }
-        /* 可折叠控制面板 - 左下角，默认折叠 */
+        /* 可折叠控制面板 - 底部居中，默认折叠 */
         .control-panel {
             position: fixed;
-            bottom: calc(var(--safe-bottom) + 12px);
-            left: calc(var(--safe-left) + 8px);
+            bottom: max(12px, env(safe-area-inset-bottom, 12px));
+            left: 50%;
+            transform: translateX(-50%);
             background: rgba(0,0,0,0.8);
             backdrop-filter: blur(10px);
-            border-radius: 28px;
+            border-radius: 40px;
             border: 1px solid rgba(255,255,255,0.2);
             z-index: 250;
             overflow: hidden;
             transition: all 0.3s ease;
-            max-width: 200px;
+            width: 180px;
+            text-align: center;
+            pointer-events: auto;
         }
         .panel-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 12px;
+            padding: 8px 16px;
             cursor: pointer;
             font-size: 12px;
             font-weight: 500;
             background: rgba(0,0,0,0.5);
-            border-radius: 28px;
+            border-radius: 40px;
             user-select: none;
+            pointer-events: auto;
         }
         .panel-header span:first-child {
             display: flex;
@@ -176,11 +197,11 @@
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.3s ease-out;
-            padding: 0 12px;
+            padding: 0 16px;
         }
         .control-panel.open .panel-content {
             max-height: 180px;
-            padding: 8px 12px 12px;
+            padding: 8px 16px 12px;
         }
         .control-panel.open .toggle-icon {
             transform: rotate(180deg);
@@ -194,6 +215,7 @@
             background: #2d3748;
             color: white;
             font-size: 11px;
+            pointer-events: auto;
         }
         .control-panel button {
             width: 100%;
@@ -206,22 +228,24 @@
             font-size: 11px;
             margin-top: 4px;
             cursor: pointer;
+            pointer-events: auto;
         }
         .control-panel p {
             font-size: 9px;
             color: #aaa;
             margin: 6px 0 0;
             line-height: 1.2;
+            pointer-events: none;
         }
-        /* 手机小屏微调 */
+        /* 手机小屏调整 */
         @media (max-width: 480px) {
-            .title-card { font-size: 12px; padding: 4px 12px; top: calc(var(--safe-top) + 6px); }
-            .instruction { font-size: 8px; top: calc(var(--safe-top) + 8px); right: calc(var(--safe-right) + 6px); }
-            .legend { padding: 4px 8px; top: calc(var(--safe-top) + 8px); left: calc(var(--safe-left) + 6px); max-width: 120px; }
+            .title-card { font-size: 12px; padding: 4px 12px; }
+            .instruction { font-size: 8px; top: max(8px, env(safe-area-inset-top, 8px)); right: max(8px, env(safe-area-inset-right, 8px)); }
+            .legend { bottom: max(8px, env(safe-area-inset-bottom, 8px)); left: max(8px, env(safe-area-inset-left, 8px)); padding: 4px 8px; max-width: 120px; }
             .legend h4 { font-size: 10px; }
-            .info-panel { width: 210px; bottom: calc(var(--safe-bottom) + 10px); right: calc(var(--safe-right) + 6px); padding: 8px 12px; font-size: 10px; max-height: 38vh; }
-            .control-panel { max-width: 180px; bottom: calc(var(--safe-bottom) + 10px); left: calc(var(--safe-left) + 6px); }
-            .panel-header { padding: 6px 10px; font-size: 11px; }
+            .info-panel { width: 200px; bottom: max(8px, env(safe-area-inset-bottom, 8px)); right: max(8px, env(safe-area-inset-right, 8px)); padding: 8px 10px; font-size: 10px; max-height: 38vh; }
+            .control-panel { width: 160px; bottom: max(8px, env(safe-area-inset-bottom, 8px)); }
+            .panel-header { padding: 6px 12px; font-size: 11px; }
         }
     </style>
 </head>
@@ -240,7 +264,7 @@
         <h3>👶 儿童数据详情</h3>
         <p>✨ 点击任意数据点，查看详细发育评估与月龄</p>
         <p style="font-size:10px; margin-top:6px;">共 <strong id="total-count">0</strong> 个样本</p>
-        <div class="stats" style="margin-top:6px;">🧠 PCA主成分空间 | 球体半径3.2</div>
+        <div style="margin-top:6px; font-size:9px;">🧠 PCA主成分空间 | 球体半径3.2</div>
     </div>
     
     <!-- 可折叠控制面板 -->
@@ -662,7 +686,7 @@
                 roughness: 0.3,
                 metalness: 0.1
             });
-            const geometry = new THREE.SphereGeometry(0.075, 20, 20); // 手机友好大小
+            const geometry = new THREE.SphereGeometry(0.075, 20, 20);
             const sphere = new THREE.Mesh(geometry, material);
             sphere.position.set(dataPoint.x, dataPoint.y, dataPoint.z);
             sphere.userData = { pointData: dataPoint };
@@ -710,27 +734,33 @@
                 allMeshes.push(mesh);
             });
             updateStats();
-            // 不自动显示任何具体数据，保持初始提示
-            // 但为了方便演示，如果用户点击前没有高亮，无所谓
         }
         
         loadAllPoints();
         
-        // 射线检测
+        // 射线检测，支持触摸和鼠标
         const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
-        window.addEventListener('click', (event) => {
+        const pointer = new THREE.Vector2();
+        
+        function onPointerDown(event) {
+            // 获取 canvas 相对坐标
             const rect = renderer.domElement.getBoundingClientRect();
-            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-            raycaster.setFromCamera(mouse, camera);
+            const clientX = event.clientX ?? (event.touches ? event.touches[0].clientX : 0);
+            const clientY = event.clientY ?? (event.touches ? event.touches[0].clientY : 0);
+            pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+            pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+            raycaster.setFromCamera(pointer, camera);
             const intersects = raycaster.intersectObjects(allMeshes);
             if (intersects.length > 0) {
                 const clicked = intersects[0].object;
                 highlightPoint(clicked);
                 updateInfoPanel(clicked.userData.pointData);
+                event.preventDefault(); // 防止页面滚动
             }
-        });
+        }
+        
+        window.addEventListener('click', onPointerDown);
+        window.addEventListener('touchstart', onPointerDown, { passive: false });
         
         // 添加新数据
         function addNewDataFromCSV(csvText) {
@@ -829,7 +859,8 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
         
-        console.log(`手机优化版，共 ${allData.length} 个儿童数据，初始无预选数据。`);
+        console.log(`手机优化版，共 ${allData.length} 个儿童数据，支持触摸点击。`);
     </script>
 </body>
 </html>
+```
