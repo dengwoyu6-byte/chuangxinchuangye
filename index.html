@@ -1,13 +1,3 @@
-好的，我根据您的反馈进行了针对性修复：
-
-1. **图例文字恢复显示**：将图例字体调大、颜色改为亮白，确保“0-正常”、“1-轻度”等文字清晰可见。
-2. **信息面板上移**：将信息面板的底部位置从 `12px` 提高到 `70px`，避开底部居中的控制面板，避免遮挡。
-3. **控制面板微调**：保持底部居中，但展开时向上延伸，不会与信息面板重叠。
-4. **整体手机触摸优化**：保持点云点击精准，所有面板均不干扰点击。
-
-以下是完整代码，复制保存为 `.html` 文件即可在手机上扫码查看：
-
-```html
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -52,21 +42,21 @@
             pointer-events: none;
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
-        /* 简短提示 */
+        /* 简短提示 - 缩小并下移，避免遮挡标题 */
         .instruction {
             position: fixed;
-            top: max(12px, env(safe-area-inset-top, 12px));
+            top: max(52px, env(safe-area-inset-top, 52px));
             right: max(12px, env(safe-area-inset-right, 12px));
             background: rgba(0,0,0,0.6);
             backdrop-filter: blur(4px);
-            padding: 4px 10px;
+            padding: 3px 8px;
             border-radius: 20px;
             color: #ccc;
-            font-size: 10px;
+            font-size: 9px;
             pointer-events: none;
             z-index: 300;
         }
-        /* 图例 - 左下角，确保文字清晰 */
+        /* 图例 - 左下角，文字清晰 */
         .legend {
             position: fixed;
             bottom: max(12px, env(safe-area-inset-bottom, 12px));
@@ -109,7 +99,7 @@
             margin-top: 5px;
             color: #ccc;
         }
-        /* 信息面板 - 右下角，底部提高避免被控制面板遮挡 */
+        /* 信息面板 - 右下角，底部抬高避免被控制面板遮挡 */
         .info-panel {
             position: fixed;
             bottom: max(70px, env(safe-area-inset-bottom, 70px));
@@ -151,12 +141,13 @@
             background: #1e293b;
             margin-left: 5px;
         }
-        /* 可折叠控制面板 - 底部居中，默认折叠 */
+        /* 可折叠控制面板 - 右下角偏移，避免挡住图例 */
         .control-panel {
             position: fixed;
             bottom: max(12px, env(safe-area-inset-bottom, 12px));
-            left: 50%;
-            transform: translateX(-50%);
+            right: max(12px, env(safe-area-inset-right, 12px));
+            left: auto;
+            transform: none;
             background: rgba(0,0,0,0.85);
             backdrop-filter: blur(10px);
             border-radius: 40px;
@@ -237,13 +228,13 @@
         }
         /* 手机小屏调整 */
         @media (max-width: 480px) {
-            .title-card { font-size: 12px; padding: 4px 12px; }
-            .instruction { font-size: 8px; top: max(8px, env(safe-area-inset-top, 8px)); right: max(8px, env(safe-area-inset-right, 8px)); }
+            .title-card { font-size: 12px; padding: 4px 12px; top: max(8px, env(safe-area-inset-top, 8px)); }
+            .instruction { top: max(48px, env(safe-area-inset-top, 48px)); right: max(8px, env(safe-area-inset-right, 8px)); font-size: 8px; padding: 2px 6px; }
             .legend { bottom: max(8px, env(safe-area-inset-bottom, 8px)); left: max(8px, env(safe-area-inset-left, 8px)); padding: 6px 10px; min-width: 110px; }
             .legend h4 { font-size: 11px; }
             .legend-item span { font-size: 10px; }
             .info-panel { width: 210px; bottom: max(65px, env(safe-area-inset-bottom, 65px)); right: max(8px, env(safe-area-inset-right, 8px)); padding: 8px 10px; font-size: 10px; max-height: 40vh; }
-            .control-panel { width: 160px; bottom: max(8px, env(safe-area-inset-bottom, 8px)); }
+            .control-panel { width: 160px; bottom: max(8px, env(safe-area-inset-bottom, 8px)); right: max(8px, env(safe-area-inset-right, 8px)); }
             .panel-header { padding: 6px 12px; font-size: 11px; }
         }
     </style>
@@ -857,8 +848,7 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
         
-        console.log(`手机优化版，共 ${allData.length} 个儿童数据，图例文字已恢复，信息面板上移。`);
+        console.log(`手机优化版，共 ${allData.length} 个儿童数据，控制面板已右移，提示文字缩小下移。`);
     </script>
 </body>
 </html>
-```
